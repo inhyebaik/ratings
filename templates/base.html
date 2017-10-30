@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+    <title>Ratings</title>
+</head>
+<body>
+  Ratings
+
+  {% if session['user_id'] %}
+        <a href="/logout">Log Out</a>
+  {% else %}
+        <a href="/register">Log In</a>
+
+  {% endif %}
+  <hr>
+
+  {% block content %} put your content here {% endblock %}
+  <ul>
+    {% for message in get_flashed_messages() %}
+      <li>{{ message }} </li>
+    {% endfor %}
+  </ul>
+</body>
+</html>
