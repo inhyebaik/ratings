@@ -58,6 +58,7 @@ def load_movies():
             #strip movie year from title
             if title:
                 title = title[:-7]
+                title = title.decode("latin-1")
             else:
                 title = None
 
@@ -79,7 +80,8 @@ def load_ratings():
     with open("seed_data/u.data") as ratings:
         for row in ratings:
             row = row.rstrip()
-            movie_id, user_id, score, timestamp = row.split("\t")
+            row = row.split("\t")
+            user_id, movie_id, score, timestamp = row
 
             rating = Rating(movie_id=movie_id,
                             user_id=user_id,
