@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h1>
+<a href="{{ movie.imdb_url }}">{{ movie.title }}</a>
+</h1>
+<br>
+<!-- check if session is there, else don't show -->
+{% if session.get('user_id') %}
+
+Add/update rating for this movie:
+<form action="/rating_handler" method='POST'>
+    <!-- pass movie id through form, as hidden object -->
+<input type="hidden" name="movie_id" value={{ movie.movie_id }}>
+<!-- radio button to add or update a rating -->
+<input type="radio" name='rating' value='1'> 1 (bad)
+<input type="radio" name='rating' value='2'> 2
+<input type="radio" name='rating' value='3'> 3
+<input type="radio" name='rating' value='4'> 4
+<input type="radio" name='rating' value='5'> 5 (amazing)
+<br>
+<input type="submit" value="Add/update my rating">
+</form>
+
+<!-- for the movie show their ratings with the user id who gave that rating -->
+
+{% endif %}
+<br>
+<h2>Movie Ratings:</h2>
+<table>
+    <tr>
+    <th>User</th>
+    <th>Rating</th>
+    </tr>
+    {% for rating in movie.ratings %}
+    <tr>
+    <td> <a href="/users/{{ rating.user.user_id }}">{{ rating.user.user_id }}</a></td>
+    <td> {{ rating.score }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+
+{% endblock %}

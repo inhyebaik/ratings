@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 {% block content %}
-
+<!-- allows user to sign in or register -->
 <h1>Register or Log In</h1>
 <form action='/register', method='POST'>
 Email: <input type='text' name='email' required>
 <br>
-Password: <input type='text' name='password' required>
+Password: <input type='password' name='password' required>
 <input type="submit" value="Sign Up / Log In">
 </form>
 

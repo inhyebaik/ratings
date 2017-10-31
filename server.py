@@ -45,35 +45,105 @@ def register_form():
 @app.route('/register', methods=['POST'])
 def register_process():
     """Adds new user to DB"""
+    # gets information from input form
     email = request.form.get('email')
     password = request.form.get('password')
+    # fetch that user from DB as object
+    db_user = User.query.filter(User.email == email).first()
 
-    if User.query.filter(User.email == email).count() != 0:
-        db_user = User.query.filter(User.email == email).one()
+    # if that user exists in DB:
+    if db_user:
+        # verify password, redirect to their user info page;
+        # add user_id to the session
         if db_user.password == password:
             session['user_id'] = db_user.user_id
             flash("You have successfully logged in!")
-            return redirect('/')
+            url = '/users/{}'.format(db_user.user_id)
+            return redirect(url)
         else:
+            # if password doesn't match, redirect to register page
             flash("Wrong credentials, try again")
             return redirect('/register')
     else:
+        # register new user; add to DB; log them in; save user_id to session
         new_user = User(email=email, password=password)
         db.session.add(new_user)
         db.session.commit()
         flash("You're now added as a new user! Welcome!")
-        db_user = User.query.filter(User.email == email).one()
-        session['user_id'] = db_user.user_id
-        return redirect('/')
+        session['user_id'] = new_user.user_id
+        url = '/users/{}'.format(new_user.user_id)
+        # redirect to the user's info page
+        return redirect(url)
 
 
 @app.route('/logout')
 def log_out():
     """Logs a user out"""
-    session['user_id'] = None
+    del session['user_id']
     flash("You have successfully logged out!")
 
     return redirect("/")
+
+
+@app.route('/users/<user_id>')
+def show_user_details(user_id):
+    """Shows specific user's details"""
+    user = User.query.filter(User.user_id == user_id).one()
+    return render_template("user_details.html", user=user)
+
+
+@app.route('/movies')
+def show_movies():
+    """Shows list of all movies"""
+    movies = Movie.query.all()
+    return render_template("movies.html", movies=movies)
+
+
+@app.route('/movies/<movie_id>')
+def show_movie_details(movie_id):
+    """Shows specific user's details"""
+    try:
+        #fetches that movie object
+        movie = Movie.query.filter(Movie.movie_id == movie_id).one()
+    except:
+        movie = Movie.query.filter(Movie.movie_id == movie_id).first()
+        #we could print this to a log file if we had one...
+        flash("There's an issue with this movie")
+    # renders that movie's information
+    return render_template("movie_details.html", movie=movie)
+
+
+@app.route('/rating_handler', methods=['POST'])
+def handle_rating():
+    """Handles user input form for rating"""
+    #get fields from the form and session
+    new_rating = request.form.get("rating")
+    movie_id = request.form.get("movie_id")
+    user_id = session['user_id']
+
+    #pull rating row for user and movie id, if it exists
+    rating = Rating.query.filter(Rating.movie_id == movie_id,
+                                 Rating.user_id == user_id).first()
+
+    #if the row is there, this movie was already rated - need to update in DB.
+    if rating:
+        rating.score = new_rating
+        db.session.commit()
+        #inform user rating was updated
+        flash("Your rating has been updated!")
+    else:
+        #if row was not there, create new instance and add to DB.
+        rating = Rating(movie_id=movie_id,
+                        user_id=user_id,
+                        score=new_rating)
+        db.session.add(rating)
+        db.session.commit()
+        #inform user rating was added
+        flash("Your rating has been added")
+    url = "/movies/{}".format(movie_id)
+    #redirect back to movie page, which now shows user's new/updated rating.
+    return redirect(url)
+
 
 if __name__ == "__main__":
     # We have to set debug=True here, since it has to be True at the
@@ -85,7 +155,5 @@ if __name__ == "__main__":
 
     # Use the DebugToolbar
     DebugToolbarExtension(app)
-
-
 
     app.run(port=5000, host='0.0.0.0')

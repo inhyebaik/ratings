@@ -1,16 +1,16 @@
 <!doctype html>
 <html>
 <head>
+    <link rel="stylesheet" href="/static/styles.css">
     <title>Ratings</title>
 </head>
 <body>
   Ratings
-
-  {% if session['user_id'] %}
+<!-- check if there's a session. If so, add link to log out, else log in -->
+  {% if session.get('user_id') %}
         <a href="/logout">Log Out</a>
   {% else %}
         <a href="/register">Log In</a>
-
   {% endif %}
   <hr>
 
