@@ -4,6 +4,9 @@ from sqlalchemy import func
 from model import User
 from model import Rating
 from model import Movie
+from model import MovieGenre
+from model import Genre
+from model import Job
 
 from model import connect_to_db, db
 from server import app
@@ -18,7 +21,7 @@ def load_users():
     # Delete all rows in table, so if we need to run this a second time,
     # we won't be trying to add duplicate users
     User.query.delete()
-
+    jobs = {}
     # Read u.user file and insert data
     for row in open("seed_data/u.user"):
         row = row.rstrip()
@@ -28,10 +31,39 @@ def load_users():
                     age=age,
                     zipcode=zipcode)
 
+        if jobs.get(occupation) is None:
+            jobs[occupation] = len(jobs) + 1
+
+        user = User(user_id=user_id,
+                    age=age,
+                    zipcode=zipcode,
+                    job_id=jobs[occupation])
         # We need to add to the session or it won't ever be stored
         db.session.add(user)
 
+    for item in jobs.items():
+        job = Job(job_id=item[1], title=item[0])
+        db.session.add(job)
+
     # Once we're done, we should commit our work
+    db.session.commit()
+
+
+def load_genres():
+    """Load genres to database"""
+    print "Genres"
+
+    Genre.query.delete()
+
+    genre_names = ["unknown", "Action", "Adventure", "Animation",
+                   "Children's", "Comedy", "Crime", "Documentary", "Drama", "Fantasy",
+                   "Film-Noir", "Horror", "Musical", "Mystery", "Romance", "Sci-Fi",
+                   "Thriller", "War", "Western"]
+
+    for name in genre_names:
+        genre_name = Genre(name=name)
+        db.session.add(genre_name)
+
     db.session.commit()
 
 
@@ -48,6 +80,8 @@ def load_movies():
             movie_id, title, released_at = row[:3]
             #index 3 is blank
             imdb_url = row[4]
+
+            genres = row[5:]
 
             #convert date to datetime
             if released_at:
@@ -67,6 +101,12 @@ def load_movies():
                           released_at=released_at,
                           imdb_url=imdb_url)
             db.session.add(movie)
+
+            #handle genres
+            for i in range(len(genres)):
+                if genres[i] == '1':
+                    movie_genre = MovieGenre(movie_id=movie_id, genre_id=i+1)
+                    db.session.add(movie_genre)
 
         db.session.commit()
 
@@ -91,6 +131,8 @@ def load_ratings():
         db.session.commit()
 
 
+
+
 def set_val_user_id():
     """Set value for the next user_id after seeding database"""
 
@@ -112,6 +154,7 @@ if __name__ == "__main__":
 
     # Import different types of data
     load_users()
+    load_genres()
     load_movies()
     load_ratings()
     set_val_user_id()

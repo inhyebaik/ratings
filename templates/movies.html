@@ -2,7 +2,16 @@
 {% block content %}
 
     <h2>Movies</h2>
-    <ul>
+
+    Filter by genre:
+      <select id="genre-option">
+        <option value="all">All</option>
+        {% for genre in genres %}
+        <option value={{ genre.name }}>{{ genre.name }}</option>
+        {% endfor %}
+      </select>
+
+    <ul id="movie-list">
       <!-- for each movie object, link to movie page -->
       {% for movie in movies %}
           <li>

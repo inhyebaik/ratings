@@ -6,7 +6,7 @@ from flask import (Flask, render_template, redirect, request, flash,
                    session, jsonify)
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_sqlalchemy import SQLAlchemy
-from model import User, Rating, Movie, connect_to_db, db
+from model import User, Rating, Movie, Genre, Job, connect_to_db, db
 
 
 app = Flask(__name__)
@@ -96,21 +96,60 @@ def show_user_details(user_id):
 def show_movies():
     """Shows list of all movies"""
     movies = Movie.query.all()
-    return render_template("movies.html", movies=movies)
+    genres = Genre.query.filter(Genre.name != 'unknown').all()
+    return render_template("movies.html", movies=movies, genres=genres)
 
 
 @app.route('/movies/<movie_id>')
-def show_movie_details(movie_id):
-    """Shows specific user's details"""
-    try:
-        #fetches that movie object
-        movie = Movie.query.filter(Movie.movie_id == movie_id).one()
-    except:
-        movie = Movie.query.filter(Movie.movie_id == movie_id).first()
-        #we could print this to a log file if we had one...
-        flash("There's an issue with this movie")
-    # renders that movie's information
-    return render_template("movie_details.html", movie=movie)
+# def show_movie_details(movie_id):
+#     """Shows specific user's details"""
+#     try:
+#         #fetches that movie object
+#         movie = Movie.query.filter(Movie.movie_id == movie_id).one()
+#     except:
+#         movie = Movie.query.filter(Movie.movie_id == movie_id).first()
+#         #we could print this to a log file if we had one...
+#         flash("There's an issue with this movie")
+#     # renders that movie's information
+#     return render_template("movie_details.html", movie=movie)
+def movie_detail(movie_id):
+    """Show info about movie.
+
+    If a user is logged in, let them add/edit a rating.
+    """
+
+    movie = Movie.query.get(movie_id)
+
+    user_id = session.get("user_id")
+
+    if user_id:
+        user_rating = Rating.query.filter_by(
+            movie_id=movie_id, user_id=user_id).first()
+
+    else:
+        user_rating = None
+
+    # Get average rating of movie
+
+    rating_scores = [r.score for r in movie.ratings]
+    avg_rating = round(float(sum(rating_scores)) / len(rating_scores), 1)
+
+    prediction = None
+
+    # Prediction code: only predict if the user hasn't rated it.
+
+    if (not user_rating) and user_id:
+        user = User.query.get(user_id)
+        if user:
+            prediction = round(float(user.predict_rating(movie)), 1)
+
+    return render_template(
+        "movie_details.html",
+        movie=movie,
+        user_rating=user_rating,
+        average=avg_rating,
+        prediction=prediction
+        )
 
 
 @app.route('/rating_handler', methods=['POST'])
@@ -143,6 +182,19 @@ def handle_rating():
     url = "/movies/{}".format(movie_id)
     #redirect back to movie page, which now shows user's new/updated rating.
     return redirect(url)
+
+
+@app.route('/movie-filter.json')
+def filter_movies():
+    """Returns filtered movie list."""
+
+    input_genre = request.args.get("inputGenre")
+    filtered_movies = Movie.query.filter(Movie.genres)
+    import pdb; pdb.set_trace()
+
+
+
+
 
 
 if __name__ == "__main__":
