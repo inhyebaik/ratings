@@ -14,6 +14,9 @@ function handleGenre(evt) {
 function filterGenre(results) {
     console.log('test 3');
     $("#movie-list").empty();
+    console.dir(results);
+    let movie_titles = results.keys();
+    let movie_objects = results.values();
 
     for (let movie in results){
         $("#movie-list").append(

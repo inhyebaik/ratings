@@ -133,6 +133,10 @@ class Genre(db.Model):
     genre_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
 
+    def __repr__(self):
+        """Provide better representation."""
+        return "<Genre name={}>".format(self.name)
+
 
 class MovieGenre(db.Model):
     """Association table for model and genre tables."""

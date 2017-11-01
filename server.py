@@ -189,9 +189,17 @@ def filter_movies():
     """Returns filtered movie list."""
 
     input_genre = request.args.get("inputGenre")
-    filtered_movies = Movie.query.filter(Movie.genres)
-    import pdb; pdb.set_trace()
+    all_movies = Movie.query.all()
+    filtered_movies = {}
 
+    for movie in all_movies:
+        for genre in movie.genres:
+            if genre.name == input_genre:
+                filtered_movies[movie.title] = movie
+
+    print filtered_movies
+    # import pdb; pdb.set_trace()
+    return jsonify(filtered_movies)
 
 
 
