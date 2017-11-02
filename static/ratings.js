@@ -11,6 +11,7 @@ function handleGenre(evt) {
 }
 
 function filterGenre(results) {
+
     $("#movie-list").empty();
     for (let movie in results) {
         $("#movie-list").append(

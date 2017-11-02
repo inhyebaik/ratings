@@ -10,6 +10,7 @@ from model import User, Rating, Movie, Genre, Job, connect_to_db, db
 
 
 app = Flask(__name__)
+# app.config['JSON_SORT_KEYS'] = False
 
 # Required to use Flask sessions and the debug toolbar
 app.secret_key = "ABC"
@@ -197,15 +198,18 @@ def filter_movies():
 
     input_genre = request.args.get("inputGenre")
 
-    all_movies = Movie.query.all()
-    filtered_movies = {}
-    for movie in all_movies:
-        for genre in movie.genres:
-            if genre.name == input_genre or input_genre == "all":
-                filtered_movies[movie.title] = movie.movie_id
+    if input_genre == "all":
+        movie_list = Movie.query.all()
+    else:
+        genre = Genre.query.filter(Genre.name == input_genre).first()
+        movie_list = genre.movies
 
-    # import pdb; pdb.set_trace()
-    return jsonify(filtered_movies)
+    movies = {}
+
+    for movie in movie_list:
+        movies[movie.title] = movie.movie_id
+
+    return jsonify(movies)
 
 
 if __name__ == "__main__":
