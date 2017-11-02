@@ -125,7 +125,9 @@ def movie_detail(movie_id):
     if user_id:
         user_rating = Rating.query.filter_by(
             movie_id=movie_id, user_id=user_id).first()
-
+        #have they ever rated anything?
+        user_all_rating = Rating.query.filter_by(
+            user_id=user_id).count()
     else:
         user_rating = None
 
@@ -137,8 +139,13 @@ def movie_detail(movie_id):
     prediction = None
 
     # Prediction code: only predict if the user hasn't rated it.
+    print "user rating {}".format(user_rating)
+    print not user_rating
+    print user_rating is not None
 
-    if (not user_rating) and user_id:
+    #This will only show a prediction if the user hasn't rated this movie.
+    #Also, will not try to guess a rating if user has never rated 0 or 1 movies.
+    if (not user_rating) and user_id and (user_all_rating > 1):
         user = User.query.get(user_id)
         if user:
             prediction = round(float(user.predict_rating(movie)), 1)
@@ -189,20 +196,16 @@ def filter_movies():
     """Returns filtered movie list."""
 
     input_genre = request.args.get("inputGenre")
+
     all_movies = Movie.query.all()
     filtered_movies = {}
-
     for movie in all_movies:
         for genre in movie.genres:
-            if genre.name == input_genre:
-                filtered_movies[movie.title] = movie
+            if genre.name == input_genre or input_genre == "all":
+                filtered_movies[movie.title] = movie.movie_id
 
-    print filtered_movies
     # import pdb; pdb.set_trace()
     return jsonify(filtered_movies)
-
-
-
 
 
 if __name__ == "__main__":

@@ -1,9 +1,8 @@
 "use strict";
 
 function handleGenre(evt) {
-    evt.preventDefault();
-    console.log('test 2');
 
+    evt.preventDefault();
     let formInput = {
         "inputGenre": $("#genre-option").val()
     }
@@ -12,17 +11,12 @@ function handleGenre(evt) {
 }
 
 function filterGenre(results) {
-    console.log('test 3');
     $("#movie-list").empty();
-    console.dir(results);
-    let movie_titles = results.keys();
-    let movie_objects = results.values();
-
-    for (let movie in results){
+    for (let movie in results) {
         $("#movie-list").append(
                   `<li>
-                      <a href="/movies/${movie.movie_id}">
-                        ${movie.title} (${movie.movie_id})
+                      <a href="/movies/${results[movie]}">
+                        ${movie} (${results[movie]})
                       </a>
                   </li>`
             );

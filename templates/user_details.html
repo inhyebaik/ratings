@@ -6,7 +6,11 @@ Age: {{ user.age }}
 <br>
 Zipcode: {{ user.zipcode }}
 <br>
-Job: {{ user.job.title }}
+{% if user.job_id %}
+    Job: {{ user.job.title }}
+{% else %}
+    Job: unknown
+{% endif %}
 <br>
 
 <h2>Movie Ratings:</h2>
