@@ -21,6 +21,36 @@ app.secret_key = "ABC"
 app.jinja_env.undefined = StrictUndefined
 
 
+def ave_rating(movie):
+    rating_scores = [r.score for r in movie.ratings]
+    avg_rating = round(float(sum(rating_scores)) / len(rating_scores), 1)
+    return avg_rating
+
+
+def get_user_rating(user_id, movie_id):
+    user_rating = Rating.query.filter_by(movie_id=movie_id, user_id=user_id).first()
+    return user_rating
+
+
+def get_prediction(user_id, movie, user_rating):
+    #have they ever rated anything?
+    user_all_rating = Rating.query.filter_by(user_id=user_id).count()
+
+    # Prediction code: only predict if the user hasn't rated it.
+    prediction = None
+
+    #This will only show a prediction if the user hasn't rated this movie.
+    #Also, will not try to guess a rating if user has never rated 0 or 1 movies.
+    if (not user_rating) and (user_all_rating > 1):
+        user = User.query.get(user_id)
+        if user:
+            prediction = round(float(user.predict_rating(movie)), 1)
+        else:
+            return None
+    else:
+        return None
+    return prediction
+
 @app.route('/')
 def index():
     """Homepage."""
@@ -102,54 +132,21 @@ def show_movies():
 
 
 @app.route('/movies/<movie_id>')
-# def show_movie_details(movie_id):
-#     """Shows specific user's details"""
-#     try:
-#         #fetches that movie object
-#         movie = Movie.query.filter(Movie.movie_id == movie_id).one()
-#     except:
-#         movie = Movie.query.filter(Movie.movie_id == movie_id).first()
-#         #we could print this to a log file if we had one...
-#         flash("There's an issue with this movie")
-#     # renders that movie's information
-#     return render_template("movie_details.html", movie=movie)
 def movie_detail(movie_id):
     """Show info about movie.
 
     If a user is logged in, let them add/edit a rating.
     """
-
-    movie = Movie.query.get(movie_id)
-
     user_id = session.get("user_id")
+    movie = Movie.query.get(movie_id)
+    avg_rating = ave_rating(movie)
 
     if user_id:
-        user_rating = Rating.query.filter_by(
-            movie_id=movie_id, user_id=user_id).first()
-        #have they ever rated anything?
-        user_all_rating = Rating.query.filter_by(
-            user_id=user_id).count()
+        user_rating = get_user_rating(user_id, movie_id)
+        prediction = get_prediction(user_id, movie, user_rating)
     else:
+        prediction = None
         user_rating = None
-
-    # Get average rating of movie
-
-    rating_scores = [r.score for r in movie.ratings]
-    avg_rating = round(float(sum(rating_scores)) / len(rating_scores), 1)
-
-    prediction = None
-
-    # Prediction code: only predict if the user hasn't rated it.
-    print "user rating {}".format(user_rating)
-    print not user_rating
-    print user_rating is not None
-
-    #This will only show a prediction if the user hasn't rated this movie.
-    #Also, will not try to guess a rating if user has never rated 0 or 1 movies.
-    if (not user_rating) and user_id and (user_all_rating > 1):
-        user = User.query.get(user_id)
-        if user:
-            prediction = round(float(user.predict_rating(movie)), 1)
 
     return render_template(
         "movie_details.html",

@@ -151,11 +151,11 @@ class MovieGenre(db.Model):
 # Helper functions
 
 
-def connect_to_db(app):
+def connect_to_db(app, uri='postgresql:///ratings'):
     """Connect the database to our Flask app."""
 
     # Configure to use our PstgreSQL database
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///ratings'
+    app.config['SQLALCHEMY_DATABASE_URI'] = uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.app = app
     db.init_app(app)
